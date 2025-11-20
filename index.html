@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Union Park Performance Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .background {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #000 0%, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%, #000 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            z-index: 0;
+        }
+
+        .background::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(218, 165, 32, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(192, 192, 192, 0.06) 0%, transparent 50%);
+            animation: pulseGlow 15s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(218, 165, 32, 0.2);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-icon {
+            width: 50px; height: 50px;
+            background: linear-gradient(135deg, #DAA520, #FFD700);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: #000;
+            box-shadow: 0 8px 32px rgba(218, 165, 32, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #FFD700, #DAA520, #C0C0C0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .header-stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFD700, #FFFFFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-stat-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 5px;
+        }
+
+        .datetime {
+            text-align: right;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .dashboard-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .performance-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .performance-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #FFD700, #DAA520, #FFD700, transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .performance-card:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border-color: rgba(218, 165, 32, 0.4);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 20px 60px rgba(218, 165, 32, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .performance-card:hover::before { opacity: 1; }
+
+        .performance-card.bonus-eligible {
+            border-color: rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 80px rgba(0, 255, 0, 0.4), 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: bonusPulse 2s infinite;
+        }
+
+        @keyframes bonusPulse {
+            0%, 100% {
+                box-shadow: 0 0 80px rgba(0, 255, 0, 0.4), 0 8px 32px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 120px rgba(0, 255, 0, 0.6), 0 12px 48px rgba(0, 255, 0, 0.4);
+            }
+        }
+
+        .bonus-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: bonusSpin 3s linear infinite;
+            box-shadow: 0 8px 32px rgba(0, 255, 0, 0.6);
+        }
+
+        @keyframes bonusSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .salesperson-info h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2px;
+            letter-spacing: -0.3px;
+        }
+
+        .salesperson-title {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFD700, #DAA520);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metrics {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .metric-goal {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #DAA520, #FFD700);
+            border-radius: 10px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(218, 165, 32, 0.6);
+        }
+
+        .performance-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: auto;
+        }
+
+        .indicator-icon {
+            width: 24px; height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .indicator-icon.champion {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .indicator-icon.strong {
+            background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+            box-shadow: 0 4px 20px rgba(192, 192, 192, 0.3);
+        }
+
+        .indicator-text {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .indicator-text.champion { color: #FFD700; }
+        .indicator-text.strong { color: #C0C0C0; }
+
+        .footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(218, 165, 32, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .pulse-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #DAA520;
+            box-shadow: 0 0 10px #DAA520;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .performance-card {
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+        }
+
+        .performance-card:nth-child(1) { animation-delay: 0.1s; }
+        .performance-card:nth-child(2) { animation-delay: 0.15s; }
+        .performance-card:nth-child(3) { animation-delay: 0.2s; }
+        .performance-card:nth-child(4) { animation-delay: 0.25s; }
+        .performance-card:nth-child(5) { animation-delay: 0.3s; }
+        .performance-card:nth-child(6) { animation-delay: 0.35s; }
+        .performance-card:nth-child(7) { animation-delay: 0.4s; }
+
+        /* EDIT BUTTON */
+        .edit-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #DAA520, #FFD700);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(218, 165, 32, 0.6);
+            transition: all 0.3s;
+            font-size: 24px;
+        }
+
+        .edit-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 48px rgba(218, 165, 32, 0.8);
+        }
+
+        /* EDITOR MODAL */
+        .editor-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .editor-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .editor-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            backdrop-filter: blur(40px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(218, 165, 32, 0.3);
+        }
+
+        .editor-header h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFD700, #DAA520);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .editor-close {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 20px;
+        }
+
+        .editor-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .person-editor {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .person-editor h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+
+        .delete-person-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #ff4444;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .delete-person-btn:hover {
+            background: rgba(255, 0, 0, 0.4);
+            transform: scale(1.1);
+        }
+
+        .add-person-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.2));
+            border: 2px dashed rgba(0, 255, 0, 0.4);
+            color: #4ade80;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .add-person-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.3), rgba(0, 200, 0, 0.3));
+            border-color: rgba(0, 255, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #DAA520;
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 20px rgba(218, 165, 32, 0.3);
+        }
+
+        .save-button {
+            background: linear-gradient(135deg, #DAA520, #FFD700);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 8px 32px rgba(218, 165, 32, 0.4);
+        }
+
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 48px rgba(218, 165, 32, 0.6);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="content">
+        <div class="header">
+            <div class="brand">
+                <div class="brand-icon">UP</div>
+                <div class="brand-text">
+                    <h1>Union Park Performance Center</h1>
+                    <p>Real-Time Excellence Tracking</p>
+                </div>
+            </div>
+
+            <div class="header-stats">
+                <div class="header-stat">
+                    <div class="header-stat-value" id="buickD2E">0/10</div>
+                    <div class="header-stat-label">Buick D2E Goal</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="gmcD2E">0/16</div>
+                    <div class="header-stat-label">GMC D2E Goal</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="bonusStatus">❌</div>
+                    <div class="header-stat-label">Bonus Unlocked</div>
+                </div>
+                <div class="datetime" id="datetime"></div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid" id="dashboardGrid"></div>
+
+        <div class="footer">
+            <div>UNION PARK BUICK GMC • POWERED BY AI-DRIVEN ANALYTICS</div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <div class="pulse-dot"></div>
+                <span>LIVE DISPLAY</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Button -->
+    <div class="edit-button" onclick="openEditor()" title="Click to edit data">✏️</div>
+
+    <!-- Editor Modal -->
+    <div class="editor-modal" id="editorModal">
+        <div class="editor-content">
+            <div class="editor-header">
+                <h2>📊 Edit Dashboard Data</h2>
+                <div class="editor-close" onclick="closeEditor()">✕</div>
+            </div>
+            <div id="editorForm"></div>
+            <button class="save-button" onclick="saveData()">💾 SAVE & UPDATE DASHBOARD</button>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let monthlyGoals = JSON.parse(localStorage.getItem('monthlyGoals')) || {
+            buickGoal: 10,
+            buickCurrent: 0,
+            gmcGoal: 16,
+            gmcCurrent: 0
+        };
+
+        let salesData = JSON.parse(localStorage.getItem('salesData')) || [
+            {name:"Andrea Guido",title:"Senior Advisor",brand:"Mixed",unitsGoal:10,unitsSold:8,d2eGoal:7,d2eCurrent:5,buickD2E:2,gmcD2E:3,phoneGoal:15,phoneCalls:18,apptGoal:1,apptSet:3},
+            {name:"Tom Guido",title:"Sales Advisor",brand:"Mixed",unitsGoal:10,unitsSold:6,d2eGoal:7,d2eCurrent:4,buickD2E:1,gmcD2E:3,phoneGoal:15,phoneCalls:12,apptGoal:1,apptSet:1},
+            {name:"Jim Vandyke",title:"Senior Advisor",brand:"Mixed",unitsGoal:10,unitsSold:9,d2eGoal:7,d2eCurrent:6,buickD2E:3,gmcD2E:3,phoneGoal:15,phoneCalls:16,apptGoal:1,apptSet:2},
+            {name:"Sam Williams",title:"Sales Advisor",brand:"Mixed",unitsGoal:10,unitsSold:7,d2eGoal:7,d2eCurrent:5,buickD2E:2,gmcD2E:3,phoneGoal:15,phoneCalls:14,apptGoal:1,apptSet:2},
+            {name:"Chris Meeks",title:"Sales Advisor",brand:"Mixed",unitsGoal:10,unitsSold:5,d2eGoal:7,d2eCurrent:3,buickD2E:1,gmcD2E:2,phoneGoal:15,phoneCalls:10,apptGoal:1,apptSet:1},
+            {name:"Javier Aviles",title:"Sales Advisor",brand:"Mixed",unitsGoal:10,unitsSold:4,d2eGoal:7,d2eCurrent:2,buickD2E:0,gmcD2E:2,phoneGoal:15,phoneCalls:8,apptGoal:1,apptSet:1},
+            {name:"Evan Roberts",title:"Sales Advisor",brand:"Mixed",unitsGoal:10,unitsSold:6,d2eGoal:7,d2eCurrent:4,buickD2E:2,gmcD2E:2,phoneGoal:15,phoneCalls:13,apptGoal:1,apptSet:2}
+        ];
+
+        function renderDashboard() {
+            const grid = document.getElementById('dashboardGrid');
+
+            // Calculate team Buick and GMC D2E totals
+            let totalBuickD2E = 0;
+            let totalGmcD2E = 0;
+
+            salesData.forEach(p => {
+                totalBuickD2E += p.buickD2E || 0;
+                totalGmcD2E += p.gmcD2E || 0;
+            });
+
+            // Check if team hit BOTH goals (required for bonus)
+            const buickGoalMet = totalBuickD2E >= monthlyGoals.buickGoal;
+            const gmcGoalMet = totalGmcD2E >= monthlyGoals.gmcGoal;
+            const bonusUnlocked = buickGoalMet && gmcGoalMet;
+
+            // Update header
+            document.getElementById('buickD2E').textContent = `${totalBuickD2E}/${monthlyGoals.buickGoal}`;
+            document.getElementById('gmcD2E').textContent = `${totalGmcD2E}/${monthlyGoals.gmcGoal}`;
+            document.getElementById('bonusStatus').textContent = bonusUnlocked ? '✅ YES!' : '❌ NO';
+            document.getElementById('bonusStatus').style.color = bonusUnlocked ? '#00ff00' : '#ff4444';
+
+            grid.innerHTML = salesData.map((p, i) => {
+                const d2ePct = (p.d2eCurrent/p.d2eGoal)*100;
+                const unitPct = (p.unitsSold/p.unitsGoal)*100;
+                const overall = Math.round((d2ePct+unitPct)/2);
+
+                // Bonus eligibility: 4+ units sold AND team hit both D2E goals
+                const bonusEligible = p.unitsSold >= 4 && bonusUnlocked;
+                const status = bonusEligible ? 'bonus-eligible' : (overall>=85?'champion':'strong');
+                const statusText = bonusEligible ? '💰 BONUS!' : (overall>=85?'Champion':'Strong');
+
+                return `
+                    <div class="performance-card ${status}" onclick="quickEdit(${i})">
+                        ${bonusEligible ? '<div class="bonus-badge">💰</div>' : ''}
+                        <div class="card-header">
+                            <div class="salesperson-info">
+                                <h3>${p.name.split(' ')[0]}<br>${p.name.split(' ')[1]}</h3>
+                                <div class="salesperson-title">${p.title}</div>
+                            </div>
+                            <div class="status-badge">${overall}%</div>
+                        </div>
+                        <div class="metrics">
+                            <div class="metric-row">
+                                <div class="metric-label">Total Units</div>
+                                <div class="metric-value">${p.unitsSold}<span class="metric-goal">/${p.unitsGoal}</span></div>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(unitPct,100)}%"></div></div>
+
+                            <div class="metric-row">
+                                <div class="metric-label">Buick D2E</div>
+                                <div class="metric-value">${p.buickD2E || 0}</div>
+                            </div>
+
+                            <div class="metric-row">
+                                <div class="metric-label">GMC D2E</div>
+                                <div class="metric-value">${p.gmcD2E || 0}</div>
+                            </div>
+
+                            <div class="metric-row">
+                                <div class="metric-label">Calls</div>
+                                <div class="metric-value">${p.phoneCalls}<span class="metric-goal">/${p.phoneGoal}</span></div>
+                            </div>
+                            <div class="metric-row">
+                                <div class="metric-label">Appts Today</div>
+                                <div class="metric-value">${p.apptSet}<span class="metric-goal"> (${p.apptGoal}/shift)</span></div>
+                            </div>
+                        </div>
+                        <div class="performance-indicator">
+                            <div class="indicator-icon ${bonusEligible?'champion':'strong'}">${bonusEligible?'💰':(overall>=85?'👑':'⚡')}</div>
+                            <div class="indicator-text ${bonusEligible?'champion':'strong'}">${statusText}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+            const timeStr = now.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit',hour12:true});
+            document.getElementById('datetime').innerHTML = `${dateStr}<br><span style="font-size:1.1rem;font-weight:700">${timeStr}</span>`;
+        }
+
+        function openEditor() {
+            const form = document.getElementById('editorForm');
+            form.innerHTML = `
+                <div class="person-editor" style="background: linear-gradient(135deg, rgba(218, 165, 32, 0.1), rgba(255, 215, 0, 0.05)); border-color: rgba(218, 165, 32, 0.3);">
+                    <h3>📅 Monthly D2E Goals</h3>
+                    <div class="editor-grid">
+                        <div class="input-group">
+                            <label>Buick D2E Goal This Month</label>
+                            <input type="number" id="buickGoal" value="${monthlyGoals.buickGoal}">
+                        </div>
+                        <div class="input-group">
+                            <label>GMC D2E Goal This Month</label>
+                            <input type="number" id="gmcGoal" value="${monthlyGoals.gmcGoal}">
+                        </div>
+                    </div>
+                    <p style="margin-top:10px; font-size:0.85rem; color:rgba(255,255,255,0.6);">
+                        ⚠️ BOTH goals must be met for anyone to qualify for bonus! Change these monthly.
+                    </p>
+                </div>
+                <div class="add-person-btn" onclick="addPerson()">
+                    ➕ ADD NEW SALESPERSON
+                </div>
+            ` + salesData.map((p, i) => `
+                <div class="person-editor">
+                    <div class="delete-person-btn" onclick="deletePerson(${i})" title="Remove this person">🗑️</div>
+                    <h3>${p.name}</h3>
+                    <div class="editor-grid">
+                        <div class="input-group">
+                            <label>Name</label>
+                            <input type="text" id="name-${i}" value="${p.name}">
+                        </div>
+                        <div class="input-group">
+                            <label>Title</label>
+                            <input type="text" id="title-${i}" value="${p.title}">
+                        </div>
+                        <div class="input-group">
+                            <label>Units Sold</label>
+                            <input type="number" id="unitsSold-${i}" value="${p.unitsSold}">
+                        </div>
+                        <div class="input-group">
+                            <label>Units Goal</label>
+                            <input type="number" id="unitsGoal-${i}" value="${p.unitsGoal}">
+                        </div>
+                        <div class="input-group">
+                            <label>Buick D2E</label>
+                            <input type="number" id="buickD2E-${i}" value="${p.buickD2E || 0}">
+                        </div>
+                        <div class="input-group">
+                            <label>GMC D2E</label>
+                            <input type="number" id="gmcD2E-${i}" value="${p.gmcD2E || 0}">
+                        </div>
+                        <div class="input-group">
+                            <label>Phone Calls</label>
+                            <input type="number" id="phoneCalls-${i}" value="${p.phoneCalls}">
+                        </div>
+                        <div class="input-group">
+                            <label>Phone Goal</label>
+                            <input type="number" id="phoneGoal-${i}" value="${p.phoneGoal}">
+                        </div>
+                        <div class="input-group">
+                            <label>Appointments Today</label>
+                            <input type="number" id="apptSet-${i}" value="${p.apptSet}">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Per Shift (usually 1)</label>
+                            <input type="number" id="apptGoal-${i}" value="${p.apptGoal}">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('editorModal').classList.add('active');
+        }
+
+        function addPerson() {
+            salesData.push({
+                name: "New Person",
+                title: "Sales Advisor",
+                brand: "Mixed",
+                unitsGoal: 10,
+                unitsSold: 0,
+                d2eGoal: 7,
+                d2eCurrent: 0,
+                buickD2E: 0,
+                gmcD2E: 0,
+                phoneGoal: 15,
+                phoneCalls: 0,
+                apptGoal: 1,
+                apptSet: 0
+            });
+            openEditor(); // Refresh the editor to show new person
+        }
+
+        function deletePerson(index) {
+            if (confirm(`Are you sure you want to remove ${salesData[index].name}?`)) {
+                salesData.splice(index, 1);
+                openEditor(); // Refresh the editor
+            }
+        }
+
+        function closeEditor() {
+            document.getElementById('editorModal').classList.remove('active');
+        }
+
+        function quickEdit(index) {
+            openEditor();
+            setTimeout(() => {
+                document.getElementById(`unitsSold-${index}`).focus();
+            }, 100);
+        }
+
+        function saveData() {
+            // Save monthly goals
+            monthlyGoals = {
+                buickGoal: parseInt(document.getElementById('buickGoal').value),
+                gmcGoal: parseInt(document.getElementById('gmcGoal').value)
+            };
+
+            // Save salesperson data
+            salesData = salesData.map((p, i) => ({
+                name: document.getElementById(`name-${i}`).value,
+                title: document.getElementById(`title-${i}`).value,
+                unitsSold: parseInt(document.getElementById(`unitsSold-${i}`).value),
+                unitsGoal: parseInt(document.getElementById(`unitsGoal-${i}`).value),
+                buickD2E: parseInt(document.getElementById(`buickD2E-${i}`).value) || 0,
+                gmcD2E: parseInt(document.getElementById(`gmcD2E-${i}`).value) || 0,
+                d2eCurrent: (parseInt(document.getElementById(`buickD2E-${i}`).value) || 0) + (parseInt(document.getElementById(`gmcD2E-${i}`).value) || 0),
+                d2eGoal: 7, // Standard goal
+                phoneCalls: parseInt(document.getElementById(`phoneCalls-${i}`).value),
+                phoneGoal: parseInt(document.getElementById(`phoneGoal-${i}`).value),
+                apptSet: parseInt(document.getElementById(`apptSet-${i}`).value),
+                apptGoal: parseInt(document.getElementById(`apptGoal-${i}`).value)
+            }));
+
+            localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
+            localStorage.setItem('salesData', JSON.stringify(salesData));
+            renderDashboard();
+            closeEditor();
+        }
+
+        // Keyboard shortcut: Press 'E' to open editor
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'e' || e.key === 'E') {
+                if (!document.getElementById('editorModal').classList.contains('active')) {
+                    openEditor();
+                }
+            }
+            if (e.key === 'Escape') {
+                closeEditor();
+            }
+        });
+
+        window.addEventListener('load', () => {
+            renderDashboard();
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+        });
+    </script>
+</body>
+</html>
