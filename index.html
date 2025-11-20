@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Union Park Performance Center</title>
+    <title>Union Park Performance Center - Live TV Display</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,6 +45,25 @@
             50% { opacity: 1; }
         }
 
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .screen.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
         .content {
             position: relative;
             z-index: 1;
@@ -70,20 +89,20 @@
         }
 
         .brand-icon {
-            width: 50px; height: 50px;
+            width: 60px; height: 60px;
             background: linear-gradient(135deg, #DAA520, #FFD700);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 900;
             color: #000;
             box-shadow: 0 8px 32px rgba(218, 165, 32, 0.4);
         }
 
         .brand-text h1 {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 800;
             letter-spacing: -0.5px;
             background: linear-gradient(135deg, #FFD700, #DAA520, #C0C0C0);
@@ -92,7 +111,7 @@
         }
 
         .brand-text p {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: rgba(255, 255, 255, 0.5);
             font-weight: 500;
             letter-spacing: 2px;
@@ -130,12 +149,43 @@
             font-weight: 500;
         }
 
+        /* SCREEN INDICATOR */
+        .screen-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(20px);
+        }
+
+        .screen-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .screen-dot.active {
+            background: #FFD700;
+            width: 40px;
+            border-radius: 10px;
+        }
+
+        /* DASHBOARD GRID */
         .dashboard-grid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .performance-card {
@@ -150,7 +200,6 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            cursor: pointer;
         }
 
         .performance-card::before {
@@ -244,14 +293,14 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .metric-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 6px 0;
         }
 
         .metric-label {
@@ -279,7 +328,7 @@
             background: rgba(255, 255, 255, 0.05);
             border-radius: 10px;
             overflow: hidden;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .progress-fill {
@@ -328,6 +377,372 @@
         .indicator-text.champion { color: #FFD700; }
         .indicator-text.strong { color: #C0C0C0; }
 
+        /* LEADERBOARD STYLES */
+        .leaderboard {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow: auto;
+        }
+
+        .leaderboard-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(40px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            transition: all 0.3s;
+            animation: slideInRight 0.6s ease backwards;
+        }
+
+        .leaderboard-item:nth-child(1) { animation-delay: 0.1s; }
+        .leaderboard-item:nth-child(2) { animation-delay: 0.2s; }
+        .leaderboard-item:nth-child(3) { animation-delay: 0.3s; }
+        .leaderboard-item:nth-child(4) { animation-delay: 0.4s; }
+        .leaderboard-item:nth-child(5) { animation-delay: 0.5s; }
+        .leaderboard-item:nth-child(6) { animation-delay: 0.6s; }
+        .leaderboard-item:nth-child(7) { animation-delay: 0.7s; }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .leaderboard-item.rank-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(218, 165, 32, 0.1));
+            border-color: rgba(255, 215, 0, 0.4);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+        }
+
+        .leaderboard-item.rank-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(169, 169, 169, 0.1));
+            border-color: rgba(192, 192, 192, 0.4);
+        }
+
+        .leaderboard-item.rank-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(184, 115, 51, 0.1));
+            border-color: rgba(205, 127, 50, 0.4);
+        }
+
+        .rank-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .rank-badge.rank-1 {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            box-shadow: 0 8px 32px rgba(255, 215, 0, 0.5);
+        }
+
+        .rank-badge.rank-2 {
+            background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+            box-shadow: 0 8px 32px rgba(192, 192, 192, 0.4);
+        }
+
+        .rank-badge.rank-3 {
+            background: linear-gradient(135deg, #CD7F32, #B87333);
+            box-shadow: 0 8px 32px rgba(205, 127, 50, 0.4);
+        }
+
+        .rank-badge.rank-other {
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .leaderboard-stats {
+            display: flex;
+            gap: 30px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .leaderboard-stat strong {
+            color: #FFD700;
+            font-weight: 700;
+        }
+
+        .leaderboard-score {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #FFD700, #FFFFFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* SPIFF CARS SCREEN */
+        .spiff-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            overflow: auto;
+        }
+
+        .spiff-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(40px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            overflow: hidden;
+            transition: all 0.4s;
+            position: relative;
+            animation: fadeInUp 0.8s ease backwards;
+        }
+
+        .spiff-card:nth-child(1) { animation-delay: 0.1s; }
+        .spiff-card:nth-child(2) { animation-delay: 0.2s; }
+        .spiff-card:nth-child(3) { animation-delay: 0.3s; }
+        .spiff-card:nth-child(4) { animation-delay: 0.4s; }
+        .spiff-card:nth-child(5) { animation-delay: 0.5s; }
+        .spiff-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .spiff-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 215, 0, 0.6);
+            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.4);
+        }
+
+        .spiff-ribbon {
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: white;
+            padding: 8px 45px;
+            transform: rotate(45deg);
+            font-weight: 800;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.6);
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spiff-image {
+            height: 200px;
+            background: linear-gradient(135deg, rgba(218, 165, 32, 0.1), rgba(192, 192, 192, 0.05));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .spiff-content {
+            padding: 25px;
+        }
+
+        .spiff-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #FFD700;
+        }
+
+        .spiff-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 15px;
+        }
+
+        .spiff-bonus {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: #000;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 800;
+            font-size: 1.8rem;
+            box-shadow: 0 8px 32px rgba(0, 255, 0, 0.4);
+        }
+
+        .spiff-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+        }
+
+        .spiff-detail {
+            text-align: center;
+        }
+
+        .spiff-detail-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .spiff-detail-value {
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        /* TEAM GOALS SCREEN */
+        .team-goals-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            overflow: auto;
+        }
+
+        .goal-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(40px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.8s ease backwards;
+        }
+
+        .goal-card:nth-child(1) { animation-delay: 0.1s; }
+        .goal-card:nth-child(2) { animation-delay: 0.2s; }
+        .goal-card:nth-child(3) { animation-delay: 0.3s; }
+        .goal-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .goal-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .goal-main {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .goal-current {
+            font-size: 5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #FFD700, #FFFFFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .goal-target {
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 700;
+        }
+
+        .goal-progress-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .goal-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #DAA520, #FFD700, #00ff00);
+            border-radius: 15px;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 30px rgba(218, 165, 32, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .goal-percentage {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #FFD700;
+            text-align: right;
+        }
+
+        .goal-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .goal-status.not-met {
+            background: rgba(255, 255, 0, 0.1);
+            border-color: rgba(255, 255, 0, 0.3);
+            color: #ffff00;
+        }
+
+        /* FOOTER */
         .footer {
             margin-top: 20px;
             padding-top: 15px;
@@ -352,27 +767,10 @@
             50% { opacity: 0.5; transform: scale(1.2); }
         }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .performance-card {
-            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-        }
-
-        .performance-card:nth-child(1) { animation-delay: 0.1s; }
-        .performance-card:nth-child(2) { animation-delay: 0.15s; }
-        .performance-card:nth-child(3) { animation-delay: 0.2s; }
-        .performance-card:nth-child(4) { animation-delay: 0.25s; }
-        .performance-card:nth-child(5) { animation-delay: 0.3s; }
-        .performance-card:nth-child(6) { animation-delay: 0.35s; }
-        .performance-card:nth-child(7) { animation-delay: 0.4s; }
-
         /* EDIT BUTTON */
         .edit-button {
             position: fixed;
-            bottom: 30px;
+            bottom: 80px;
             right: 30px;
             width: 60px;
             height: 60px;
@@ -419,7 +817,7 @@
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 40px;
-            max-width: 1200px;
+            max-width: 1400px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -442,6 +840,28 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .editor-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .editor-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .editor-tab.active {
+            background: linear-gradient(135deg, #DAA520, #FFD700);
+            color: #000;
+            border-color: transparent;
+        }
+
         .editor-close {
             width: 40px;
             height: 40px;
@@ -460,6 +880,14 @@
             transform: rotate(90deg);
         }
 
+        .editor-section {
+            display: none;
+        }
+
+        .editor-section.active {
+            display: block;
+        }
+
         .person-editor {
             background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
@@ -475,7 +903,7 @@
             color: #FFD700;
         }
 
-        .delete-person-btn {
+        .delete-btn {
             position: absolute;
             top: 20px;
             right: 20px;
@@ -494,12 +922,12 @@
             font-weight: bold;
         }
 
-        .delete-person-btn:hover {
+        .delete-btn:hover {
             background: rgba(255, 0, 0, 0.4);
             transform: scale(1.1);
         }
 
-        .add-person-btn {
+        .add-btn {
             background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.2));
             border: 2px dashed rgba(0, 255, 0, 0.4);
             color: #4ade80;
@@ -515,7 +943,7 @@
             letter-spacing: 1px;
         }
 
-        .add-person-btn:hover {
+        .add-btn:hover {
             background: linear-gradient(135deg, rgba(0, 255, 0, 0.3), rgba(0, 200, 0, 0.3));
             border-color: rgba(0, 255, 0, 0.6);
             transform: translateY(-2px);
@@ -541,7 +969,7 @@
             letter-spacing: 1px;
         }
 
-        .input-group input {
+        .input-group input, .input-group textarea {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
@@ -553,7 +981,12 @@
             transition: all 0.3s;
         }
 
-        .input-group input:focus {
+        .input-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
             outline: none;
             border-color: #DAA520;
             background: rgba(0, 0, 0, 0.6);
@@ -572,6 +1005,7 @@
             transition: all 0.3s;
             margin-top: 20px;
             box-shadow: 0 8px 32px rgba(218, 165, 32, 0.4);
+            width: 100%;
         }
 
         .save-button:hover {
@@ -587,42 +1021,131 @@
 <body>
     <div class="background"></div>
 
-    <div class="content">
-        <div class="header">
-            <div class="brand">
-                <div class="brand-icon">UP</div>
-                <div class="brand-text">
-                    <h1>Union Park Performance Center</h1>
-                    <p>Real-Time Excellence Tracking</p>
+    <!-- SCREEN 1: PERFORMANCE DASHBOARD -->
+    <div class="screen active" id="screen1">
+        <div class="content">
+            <div class="header">
+                <div class="brand">
+                    <div class="brand-icon">UP</div>
+                    <div class="brand-text">
+                        <h1>Union Park Performance Center</h1>
+                        <p>Real-Time Excellence Tracking</p>
+                    </div>
+                </div>
+
+                <div class="header-stats">
+                    <div class="header-stat">
+                        <div class="header-stat-value" id="buickD2E">0/10</div>
+                        <div class="header-stat-label">Buick D2E Goal</div>
+                    </div>
+                    <div class="header-stat">
+                        <div class="header-stat-value" id="gmcD2E">0/16</div>
+                        <div class="header-stat-label">GMC D2E Goal</div>
+                    </div>
+                    <div class="header-stat">
+                        <div class="header-stat-value" id="bonusStatus">❌</div>
+                        <div class="header-stat-label">Bonus Unlocked</div>
+                    </div>
+                    <div class="datetime" id="datetime"></div>
                 </div>
             </div>
 
-            <div class="header-stats">
-                <div class="header-stat">
-                    <div class="header-stat-value" id="buickD2E">0/10</div>
-                    <div class="header-stat-label">Buick D2E Goal</div>
+            <div class="dashboard-grid" id="dashboardGrid"></div>
+
+            <div class="footer">
+                <div>UNION PARK BUICK GMC • POWERED BY AI-DRIVEN ANALYTICS</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="pulse-dot"></div>
+                    <span>LIVE DISPLAY • SCREEN 1 OF 4</span>
                 </div>
-                <div class="header-stat">
-                    <div class="header-stat-value" id="gmcD2E">0/16</div>
-                    <div class="header-stat-label">GMC D2E Goal</div>
-                </div>
-                <div class="header-stat">
-                    <div class="header-stat-value" id="bonusStatus">❌</div>
-                    <div class="header-stat-label">Bonus Unlocked</div>
-                </div>
-                <div class="datetime" id="datetime"></div>
             </div>
         </div>
+    </div>
 
-        <div class="dashboard-grid" id="dashboardGrid"></div>
+    <!-- SCREEN 2: LEADERBOARD -->
+    <div class="screen" id="screen2">
+        <div class="content">
+            <div class="header">
+                <div class="brand">
+                    <div class="brand-icon">🏆</div>
+                    <div class="brand-text">
+                        <h1>Top Performers Leaderboard</h1>
+                        <p>Excellence Recognition</p>
+                    </div>
+                </div>
+                <div class="datetime" id="datetime2"></div>
+            </div>
 
-        <div class="footer">
-            <div>UNION PARK BUICK GMC • POWERED BY AI-DRIVEN ANALYTICS</div>
-            <div style="display:flex;align-items:center;gap:8px">
-                <div class="pulse-dot"></div>
-                <span>LIVE DISPLAY</span>
+            <div class="leaderboard" id="leaderboard"></div>
+
+            <div class="footer">
+                <div>UNION PARK BUICK GMC • POWERED BY AI-DRIVEN ANALYTICS</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="pulse-dot"></div>
+                    <span>LIVE DISPLAY • SCREEN 2 OF 4</span>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- SCREEN 3: SPIFF CARS -->
+    <div class="screen" id="screen3">
+        <div class="content">
+            <div class="header">
+                <div class="brand">
+                    <div class="brand-icon">🚗</div>
+                    <div class="brand-text">
+                        <h1>Hot Deals & Spiff Inventory</h1>
+                        <p>Extra Bonus Opportunities</p>
+                    </div>
+                </div>
+                <div class="datetime" id="datetime3"></div>
+            </div>
+
+            <div class="spiff-grid" id="spiffGrid"></div>
+
+            <div class="footer">
+                <div>UNION PARK BUICK GMC • POWERED BY AI-DRIVEN ANALYTICS</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="pulse-dot"></div>
+                    <span>LIVE DISPLAY • SCREEN 3 OF 4</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: TEAM GOALS -->
+    <div class="screen" id="screen4">
+        <div class="content">
+            <div class="header">
+                <div class="brand">
+                    <div class="brand-icon">🎯</div>
+                    <div class="brand-text">
+                        <h1>Team Goals & Progress</h1>
+                        <p>Collective Excellence</p>
+                    </div>
+                </div>
+                <div class="datetime" id="datetime4"></div>
+            </div>
+
+            <div class="team-goals-grid" id="teamGoalsGrid"></div>
+
+            <div class="footer">
+                <div>UNION PARK BUICK GMC • POWERED BY AI-DRIVEN ANALYTICS</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="pulse-dot"></div>
+                    <span>LIVE DISPLAY • SCREEN 4 OF 4</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screen Indicator -->
+    <div class="screen-indicator">
+        <div class="screen-dot active" onclick="switchScreen(1)"></div>
+        <div class="screen-dot" onclick="switchScreen(2)"></div>
+        <div class="screen-dot" onclick="switchScreen(3)"></div>
+        <div class="screen-dot" onclick="switchScreen(4)"></div>
     </div>
 
     <!-- Edit Button -->
@@ -635,7 +1158,27 @@
                 <h2>📊 Edit Dashboard Data</h2>
                 <div class="editor-close" onclick="closeEditor()">✕</div>
             </div>
-            <div id="editorForm"></div>
+
+            <div class="editor-tabs">
+                <div class="editor-tab active" onclick="switchEditorTab('salespeople')">Salespeople</div>
+                <div class="editor-tab" onclick="switchEditorTab('goals')">Goals</div>
+                <div class="editor-tab" onclick="switchEditorTab('spiff')">Spiff Cars</div>
+            </div>
+
+            <div class="editor-section active" id="editor-salespeople">
+                <div class="add-btn" onclick="addPerson()">➕ ADD NEW SALESPERSON</div>
+                <div id="editorFormSales"></div>
+            </div>
+
+            <div class="editor-section" id="editor-goals">
+                <div id="editorFormGoals"></div>
+            </div>
+
+            <div class="editor-section" id="editor-spiff">
+                <div class="add-btn" onclick="addSpiffCar()">➕ ADD NEW SPIFF CAR</div>
+                <div id="editorFormSpiff"></div>
+            </div>
+
             <button class="save-button" onclick="saveData()">💾 SAVE & UPDATE DASHBOARD</button>
         </div>
     </div>
@@ -644,9 +1187,9 @@
         // Data storage
         let monthlyGoals = JSON.parse(localStorage.getItem('monthlyGoals')) || {
             buickGoal: 10,
-            buickCurrent: 0,
             gmcGoal: 16,
-            gmcCurrent: 0
+            totalUnitsGoal: 70,
+            totalCallsGoal: 120
         };
 
         let salesData = JSON.parse(localStorage.getItem('salesData')) || [
@@ -658,6 +1201,48 @@
             {name:"Javier Aviles",title:"Sales Advisor",brand:"Mixed",unitsGoal:10,unitsSold:4,d2eGoal:7,d2eCurrent:2,buickD2E:0,gmcD2E:2,phoneGoal:15,phoneCalls:8,apptGoal:1,apptSet:1},
             {name:"Evan Roberts",title:"Sales Advisor",brand:"Mixed",unitsGoal:10,unitsSold:6,d2eGoal:7,d2eCurrent:4,buickD2E:2,gmcD2E:2,phoneGoal:15,phoneCalls:13,apptGoal:1,apptSet:2}
         ];
+
+        let spiffCars = JSON.parse(localStorage.getItem('spiffCars')) || [
+            {year:"2024",make:"Buick",model:"Enclave Avenir",stock:"B24-1045",bonus:500,daysInStock:45,features:"Leather, Nav, Moonroof"},
+            {year:"2024",make:"GMC",model:"Sierra 1500 Denali",stock:"G24-2089",bonus:750,daysInStock:60,features:"4WD, Tech Pkg, Tow Pkg"},
+            {year:"2024",make:"Buick",model:"Encore GX Essence",stock:"B24-1123",bonus:300,daysInStock:30,features:"AWD, Safety Pkg II"},
+            {year:"2024",make:"GMC",model:"Acadia Denali",stock:"G24-2156",bonus:600,daysInStock:50,features:"AWD, Premium Package"},
+            {year:"2023",make:"GMC",model:"Yukon XL SLT",stock:"G23-1987",bonus:1000,daysInStock:90,features:"4WD, Captain Chairs"},
+            {year:"2024",make:"Buick",model:"Envision Avenir",stock:"B24-1201",bonus:400,daysInStock:35,features:"AWD, Luxury Package"}
+        ];
+
+        let currentScreen = 1;
+        let screenInterval;
+
+        // Auto-rotate screens every 20 seconds
+        function startScreenRotation() {
+            screenInterval = setInterval(() => {
+                currentScreen = currentScreen >= 4 ? 1 : currentScreen + 1;
+                switchScreen(currentScreen);
+            }, 20000); // 20 seconds
+        }
+
+        function switchScreen(screenNum) {
+            // Clear and restart rotation
+            clearInterval(screenInterval);
+            startScreenRotation();
+
+            currentScreen = screenNum;
+
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.screen-dot').forEach(d => d.classList.remove('active'));
+
+            // Show selected screen
+            document.getElementById(`screen${screenNum}`).classList.add('active');
+            document.querySelectorAll('.screen-dot')[screenNum - 1].classList.add('active');
+
+            // Render content for the screen
+            if (screenNum === 1) renderDashboard();
+            if (screenNum === 2) renderLeaderboard();
+            if (screenNum === 3) renderSpiffCars();
+            if (screenNum === 4) renderTeamGoals();
+        }
 
         function renderDashboard() {
             const grid = document.getElementById('dashboardGrid');
@@ -693,7 +1278,7 @@
                 const statusText = bonusEligible ? '💰 BONUS!' : (overall>=85?'Champion':'Strong');
 
                 return `
-                    <div class="performance-card ${status}" onclick="quickEdit(${i})">
+                    <div class="performance-card ${status}">
                         ${bonusEligible ? '<div class="bonus-badge">💰</div>' : ''}
                         <div class="card-header">
                             <div class="salesperson-info">
@@ -737,38 +1322,172 @@
             }).join('');
         }
 
+        function renderLeaderboard() {
+            const leaderboard = document.getElementById('leaderboard');
+
+            // Calculate scores (units + D2E + calls/2)
+            const ranked = salesData.map(p => ({
+                ...p,
+                score: p.unitsSold + p.d2eCurrent + Math.floor(p.phoneCalls / 2)
+            })).sort((a, b) => b.score - a.score);
+
+            const medals = ['🥇', '🥈', '🥉'];
+
+            leaderboard.innerHTML = ranked.map((p, i) => {
+                const rank = i + 1;
+                const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+                const medal = rank <= 3 ? medals[i] : rank;
+
+                return `
+                    <div class="leaderboard-item ${rankClass}">
+                        <div class="rank-badge ${rankClass}">${medal}</div>
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-name">${p.name}</div>
+                            <div class="leaderboard-stats">
+                                <div class="leaderboard-stat"><strong>${p.unitsSold}</strong> Units</div>
+                                <div class="leaderboard-stat"><strong>${p.d2eCurrent}</strong> D2E</div>
+                                <div class="leaderboard-stat"><strong>${p.phoneCalls}</strong> Calls</div>
+                                <div class="leaderboard-stat"><strong>${p.apptSet}</strong> Appts</div>
+                            </div>
+                        </div>
+                        <div class="leaderboard-score">${p.score}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSpiffCars() {
+            const grid = document.getElementById('spiffGrid');
+
+            grid.innerHTML = spiffCars.map((car, i) => {
+                return `
+                    <div class="spiff-card">
+                        <div class="spiff-ribbon">HOT DEAL</div>
+                        <div class="spiff-image">🚗</div>
+                        <div class="spiff-content">
+                            <div class="spiff-title">${car.year} ${car.make} ${car.model}</div>
+                            <div class="spiff-subtitle">Stock #${car.stock}</div>
+                            <div class="spiff-bonus">+$${car.bonus} BONUS</div>
+                            <div class="spiff-details">
+                                <div class="spiff-detail">
+                                    <div class="spiff-detail-label">Days in Stock</div>
+                                    <div class="spiff-detail-value">${car.daysInStock}</div>
+                                </div>
+                                <div class="spiff-detail">
+                                    <div class="spiff-detail-label">Features</div>
+                                    <div class="spiff-detail-value" style="font-size:0.8rem">${car.features.split(',')[0]}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTeamGoals() {
+            const grid = document.getElementById('teamGoalsGrid');
+
+            // Calculate team totals
+            let totalUnits = 0;
+            let totalCalls = 0;
+            let totalBuickD2E = 0;
+            let totalGmcD2E = 0;
+
+            salesData.forEach(p => {
+                totalUnits += p.unitsSold;
+                totalCalls += p.phoneCalls;
+                totalBuickD2E += p.buickD2E || 0;
+                totalGmcD2E += p.gmcD2E || 0;
+            });
+
+            const goals = [
+                {
+                    title: 'Team Total Units',
+                    current: totalUnits,
+                    target: monthlyGoals.totalUnitsGoal,
+                    icon: '🚗'
+                },
+                {
+                    title: 'Buick D2E Sales',
+                    current: totalBuickD2E,
+                    target: monthlyGoals.buickGoal,
+                    icon: '🎯'
+                },
+                {
+                    title: 'GMC D2E Sales',
+                    current: totalGmcD2E,
+                    target: monthlyGoals.gmcGoal,
+                    icon: '🎯'
+                },
+                {
+                    title: 'Team Phone Calls',
+                    current: totalCalls,
+                    target: monthlyGoals.totalCallsGoal,
+                    icon: '📞'
+                }
+            ];
+
+            grid.innerHTML = goals.map(goal => {
+                const percentage = Math.min(Math.round((goal.current / goal.target) * 100), 100);
+                const isMet = goal.current >= goal.target;
+
+                return `
+                    <div class="goal-card">
+                        <div class="goal-title">${goal.icon} ${goal.title}</div>
+                        <div class="goal-main">
+                            <div class="goal-current">${goal.current}</div>
+                            <div class="goal-target">/ ${goal.target}</div>
+                        </div>
+                        <div class="goal-progress-bar">
+                            <div class="goal-progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="goal-percentage">${percentage}% Complete</div>
+                        ${isMet ?
+                            '<div class="goal-status">✅ GOAL ACHIEVED!</div>' :
+                            `<div class="goal-status not-met">⚡ ${goal.target - goal.current} TO GO</div>`
+                        }
+                    </div>
+                `;
+            }).join('');
+        }
+
         function updateDateTime() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
             const timeStr = now.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit',hour12:true});
-            document.getElementById('datetime').innerHTML = `${dateStr}<br><span style="font-size:1.1rem;font-weight:700">${timeStr}</span>`;
+            const html = `${dateStr}<br><span style="font-size:1.1rem;font-weight:700">${timeStr}</span>`;
+
+            document.getElementById('datetime').innerHTML = html;
+            document.getElementById('datetime2').innerHTML = html;
+            document.getElementById('datetime3').innerHTML = html;
+            document.getElementById('datetime4').innerHTML = html;
+        }
+
+        // EDITOR FUNCTIONS
+        function switchEditorTab(tab) {
+            document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.editor-section').forEach(s => s.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`editor-${tab}`).classList.add('active');
         }
 
         function openEditor() {
-            const form = document.getElementById('editorForm');
-            form.innerHTML = `
-                <div class="person-editor" style="background: linear-gradient(135deg, rgba(218, 165, 32, 0.1), rgba(255, 215, 0, 0.05)); border-color: rgba(218, 165, 32, 0.3);">
-                    <h3>📅 Monthly D2E Goals</h3>
-                    <div class="editor-grid">
-                        <div class="input-group">
-                            <label>Buick D2E Goal This Month</label>
-                            <input type="number" id="buickGoal" value="${monthlyGoals.buickGoal}">
-                        </div>
-                        <div class="input-group">
-                            <label>GMC D2E Goal This Month</label>
-                            <input type="number" id="gmcGoal" value="${monthlyGoals.gmcGoal}">
-                        </div>
-                    </div>
-                    <p style="margin-top:10px; font-size:0.85rem; color:rgba(255,255,255,0.6);">
-                        ⚠️ BOTH goals must be met for anyone to qualify for bonus! Change these monthly.
-                    </p>
-                </div>
-                <div class="add-person-btn" onclick="addPerson()">
-                    ➕ ADD NEW SALESPERSON
-                </div>
-            ` + salesData.map((p, i) => `
+            populateEditor();
+            document.getElementById('editorModal').classList.add('active');
+            clearInterval(screenInterval); // Pause rotation while editing
+        }
+
+        function closeEditor() {
+            document.getElementById('editorModal').classList.remove('active');
+            startScreenRotation(); // Resume rotation
+        }
+
+        function populateEditor() {
+            // Salespeople
+            document.getElementById('editorFormSales').innerHTML = salesData.map((p, i) => `
                 <div class="person-editor">
-                    <div class="delete-person-btn" onclick="deletePerson(${i})" title="Remove this person">🗑️</div>
+                    <div class="delete-btn" onclick="deletePerson(${i})">🗑️</div>
                     <h3>${p.name}</h3>
                     <div class="editor-grid">
                         <div class="input-group">
@@ -808,14 +1527,78 @@
                             <input type="number" id="apptSet-${i}" value="${p.apptSet}">
                         </div>
                         <div class="input-group">
-                            <label>Min Per Shift (usually 1)</label>
+                            <label>Min Per Shift</label>
                             <input type="number" id="apptGoal-${i}" value="${p.apptGoal}">
                         </div>
                     </div>
                 </div>
             `).join('');
 
-            document.getElementById('editorModal').classList.add('active');
+            // Goals
+            document.getElementById('editorFormGoals').innerHTML = `
+                <div class="person-editor" style="background: linear-gradient(135deg, rgba(218, 165, 32, 0.1), rgba(255, 215, 0, 0.05)); border-color: rgba(218, 165, 32, 0.3);">
+                    <h3>📅 Monthly Team Goals</h3>
+                    <div class="editor-grid">
+                        <div class="input-group">
+                            <label>Buick D2E Goal</label>
+                            <input type="number" id="buickGoal" value="${monthlyGoals.buickGoal}">
+                        </div>
+                        <div class="input-group">
+                            <label>GMC D2E Goal</label>
+                            <input type="number" id="gmcGoal" value="${monthlyGoals.gmcGoal}">
+                        </div>
+                        <div class="input-group">
+                            <label>Total Units Goal</label>
+                            <input type="number" id="totalUnitsGoal" value="${monthlyGoals.totalUnitsGoal}">
+                        </div>
+                        <div class="input-group">
+                            <label>Total Calls Goal</label>
+                            <input type="number" id="totalCallsGoal" value="${monthlyGoals.totalCallsGoal}">
+                        </div>
+                    </div>
+                    <p style="margin-top:15px; font-size:0.85rem; color:rgba(255,255,255,0.6);">
+                        ⚠️ BOTH Buick and GMC D2E goals must be met for bonus eligibility!
+                    </p>
+                </div>
+            `;
+
+            // Spiff Cars
+            document.getElementById('editorFormSpiff').innerHTML = spiffCars.map((car, i) => `
+                <div class="person-editor">
+                    <div class="delete-btn" onclick="deleteSpiffCar(${i})">🗑️</div>
+                    <h3>🚗 ${car.year} ${car.make} ${car.model}</h3>
+                    <div class="editor-grid">
+                        <div class="input-group">
+                            <label>Year</label>
+                            <input type="text" id="spiff-year-${i}" value="${car.year}">
+                        </div>
+                        <div class="input-group">
+                            <label>Make</label>
+                            <input type="text" id="spiff-make-${i}" value="${car.make}">
+                        </div>
+                        <div class="input-group">
+                            <label>Model</label>
+                            <input type="text" id="spiff-model-${i}" value="${car.model}">
+                        </div>
+                        <div class="input-group">
+                            <label>Stock Number</label>
+                            <input type="text" id="spiff-stock-${i}" value="${car.stock}">
+                        </div>
+                        <div class="input-group">
+                            <label>Bonus Amount ($)</label>
+                            <input type="number" id="spiff-bonus-${i}" value="${car.bonus}">
+                        </div>
+                        <div class="input-group">
+                            <label>Days in Stock</label>
+                            <input type="number" id="spiff-days-${i}" value="${car.daysInStock}">
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-top:15px">
+                        <label>Features (comma-separated)</label>
+                        <textarea id="spiff-features-${i}">${car.features}</textarea>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function addPerson() {
@@ -834,32 +1617,43 @@
                 apptGoal: 1,
                 apptSet: 0
             });
-            openEditor(); // Refresh the editor to show new person
+            populateEditor();
         }
 
         function deletePerson(index) {
-            if (confirm(`Are you sure you want to remove ${salesData[index].name}?`)) {
+            if (confirm(`Remove ${salesData[index].name}?`)) {
                 salesData.splice(index, 1);
-                openEditor(); // Refresh the editor
+                populateEditor();
             }
         }
 
-        function closeEditor() {
-            document.getElementById('editorModal').classList.remove('active');
+        function addSpiffCar() {
+            spiffCars.push({
+                year: "2024",
+                make: "Buick",
+                model: "New Model",
+                stock: "NEW-001",
+                bonus: 500,
+                daysInStock: 30,
+                features: "Feature 1, Feature 2"
+            });
+            populateEditor();
         }
 
-        function quickEdit(index) {
-            openEditor();
-            setTimeout(() => {
-                document.getElementById(`unitsSold-${index}`).focus();
-            }, 100);
+        function deleteSpiffCar(index) {
+            if (confirm(`Remove ${spiffCars[index].year} ${spiffCars[index].make} ${spiffCars[index].model}?`)) {
+                spiffCars.splice(index, 1);
+                populateEditor();
+            }
         }
 
         function saveData() {
             // Save monthly goals
             monthlyGoals = {
                 buickGoal: parseInt(document.getElementById('buickGoal').value),
-                gmcGoal: parseInt(document.getElementById('gmcGoal').value)
+                gmcGoal: parseInt(document.getElementById('gmcGoal').value),
+                totalUnitsGoal: parseInt(document.getElementById('totalUnitsGoal').value),
+                totalCallsGoal: parseInt(document.getElementById('totalCallsGoal').value)
             };
 
             // Save salesperson data
@@ -871,20 +1665,38 @@
                 buickD2E: parseInt(document.getElementById(`buickD2E-${i}`).value) || 0,
                 gmcD2E: parseInt(document.getElementById(`gmcD2E-${i}`).value) || 0,
                 d2eCurrent: (parseInt(document.getElementById(`buickD2E-${i}`).value) || 0) + (parseInt(document.getElementById(`gmcD2E-${i}`).value) || 0),
-                d2eGoal: 7, // Standard goal
+                d2eGoal: 7,
                 phoneCalls: parseInt(document.getElementById(`phoneCalls-${i}`).value),
                 phoneGoal: parseInt(document.getElementById(`phoneGoal-${i}`).value),
                 apptSet: parseInt(document.getElementById(`apptSet-${i}`).value),
                 apptGoal: parseInt(document.getElementById(`apptGoal-${i}`).value)
             }));
 
+            // Save spiff cars
+            spiffCars = spiffCars.map((car, i) => ({
+                year: document.getElementById(`spiff-year-${i}`).value,
+                make: document.getElementById(`spiff-make-${i}`).value,
+                model: document.getElementById(`spiff-model-${i}`).value,
+                stock: document.getElementById(`spiff-stock-${i}`).value,
+                bonus: parseInt(document.getElementById(`spiff-bonus-${i}`).value),
+                daysInStock: parseInt(document.getElementById(`spiff-days-${i}`).value),
+                features: document.getElementById(`spiff-features-${i}`).value
+            }));
+
             localStorage.setItem('monthlyGoals', JSON.stringify(monthlyGoals));
             localStorage.setItem('salesData', JSON.stringify(salesData));
-            renderDashboard();
+            localStorage.setItem('spiffCars', JSON.stringify(spiffCars));
+
+            // Re-render current screen
+            if (currentScreen === 1) renderDashboard();
+            if (currentScreen === 2) renderLeaderboard();
+            if (currentScreen === 3) renderSpiffCars();
+            if (currentScreen === 4) renderTeamGoals();
+
             closeEditor();
         }
 
-        // Keyboard shortcut: Press 'E' to open editor
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.key === 'e' || e.key === 'E') {
                 if (!document.getElementById('editorModal').classList.contains('active')) {
@@ -894,12 +1706,21 @@
             if (e.key === 'Escape') {
                 closeEditor();
             }
+            // Number keys to switch screens
+            if (e.key >= '1' && e.key <= '4') {
+                switchScreen(parseInt(e.key));
+            }
         });
 
+        // Initialize
         window.addEventListener('load', () => {
             renderDashboard();
+            renderLeaderboard();
+            renderSpiffCars();
+            renderTeamGoals();
             updateDateTime();
             setInterval(updateDateTime, 60000);
+            startScreenRotation();
         });
     </script>
 </body>
